@@ -1,6 +1,7 @@
 App({
   globalData: {
-    baseUrl: 'http://localhost:8080',
+    // baseUrl: 'http://localhost:8080',
+    baseUrl: 'https://book.wangjuxing.cn',
     userId: 1
   },
 

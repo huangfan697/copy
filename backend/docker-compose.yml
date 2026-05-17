@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  wrong-note-backend:
+    build: .
+    container_name: wrong-note-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://124.222.183.199:8808/wrong_note?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=123456
+      - OSS_ENDPOINT=oss-cn-hangzhou.aliyuncs.com
+      - OSS_ACCESS_KEY_ID=${OSS_ACCESS_KEY_ID}
+      - OSS_ACCESS_KEY_SECRET=${OSS_ACCESS_KEY_SECRET}
+      - OSS_BUCKET_NAME=wrong-note
+      - OSS_URL_PREFIX=https://wrong-note.oss-cn-hangzhou.aliyuncs.com/
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
+    restart: unless-stopped

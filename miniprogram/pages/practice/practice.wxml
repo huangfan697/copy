@@ -24,10 +24,10 @@
 
     <!-- 选项 -->
     <view class="card options-card">
-      <view class="option-item {{selectedAnswer === key ? 'selected' : ''}}"
+      <view class="option-item {{selectedAnswer === index ? 'selected' : ''}}"
             wx:for="{{questions[currentIndex].optionsObj}}"
-            wx:key="key"
-            data-answer="{{key}}"
+            wx:key="index"
+            data-answer="{{index}}"
             bindtap="onSelectAnswer">
         <text class="option-label">{{key}}.</text>
         <text class="option-text">{{item}}</text>

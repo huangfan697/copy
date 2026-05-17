@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "ssh": {
+      "command": "ssh-mcp-server",
+      "args": [],
+      "env": {
+        "SSH_HOST": "124.222.183.199",
+        "SSH_USER": "root",
+        "SSH_KEY_PATH": "/Users/wangjuxing/.ssh/id_rsa"
+      }
+    }
+  }
+}
