@@ -1,0 +1,21 @@
+# Backend
+backend/target/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Sensitive
+.env
+*.env
+
+# Miniprogram
+miniprogram/node_modules/

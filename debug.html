@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>错题集 - API 调试</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f5; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; }
+    h1 { text-align: center; color: #4F46E5; margin-bottom: 20px; }
+    .card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .card h3 { color: #1F2937; margin-bottom: 12px; font-size: 16px; }
+    input[type="text"], input[type="number"], textarea { width: 100%; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; margin-bottom: 10px; }
+    textarea { min-height: 80px; resize: vertical; }
+    button { padding: 10px 24px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
+    .btn-primary { background: #4F46E5; color: #fff; }
+    .btn-primary:hover { background: #4338ca; }
+    .btn-secondary { background: #f3f4f6; color: #374151; }
+    .result { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-top: 10px; font-family: monospace; font-size: 13px; white-space: pre-wrap; max-height: 300px; overflow-y: auto; word-break: break-all; }
+    .result.error { border-color: #fca5a5; background: #fef2f2; }
+    .result.success { border-color: #86efac; background: #f0fdf4; }
+    .config { display: flex; gap: 10px; margin-bottom: 20px; }
+    .config input { flex: 1; }
+    .section { margin-bottom: 16px; }
+    .note-card { border-left: 4px solid #4F46E5; padding: 12px; margin-bottom: 8px; background: #f9fafb; border-radius: 0 8px 8px 0; cursor: pointer; }
+    .note-card:hover { background: #eef2ff; }
+    .note-card .subject { font-weight: 600; color: #1F2937; }
+    .note-card .content { font-size: 13px; color: #6B7280; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .chart-area { width: 100%; height: 200px; border: 1px solid #e5e7eb; border-radius: 8px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>错题集 API 调试</h1>
+
+  <!-- 配置 -->
+  <div class="card">
+    <h3>后端地址</h3>
+    <input type="text" id="baseUrl" value="http://localhost:8080">
+  </div>
+
+  <!-- 上传错题 -->
+  <div class="card">
+    <h3>1. 上传错题图片</h3>
+    <input type="file" id="uploadFile" accept="image/*">
+    <button class="btn-primary" onclick="uploadNote()">上传并解析</button>
+    <div class="result" id="uploadResult"></div>
+  </div>
+
+  <!-- 错题列表 -->
+  <div class="card">
+    <h3>2. 错题列表</h3>
+    <button class="btn-secondary" onclick="loadNotes()">刷新列表</button>
+    <div id="notesList"></div>
+  </div>
+
+  <!-- 错题详情 -->
+  <div class="card">
+    <h3>3. 错题详情</h3>
+    <input type="number" id="noteId" placeholder="输入笔记 ID">
+    <button class="btn-secondary" onclick="loadNoteDetail()">查看</button>
+    <div class="result" id="detailResult"></div>
+  </div>
+
+  <!-- 生成练习 -->
+  <div class="card">
+    <h3>4. 生成练习</h3>
+    <input type="number" id="genNoteId" placeholder="输入笔记 ID">
+    <button class="btn-primary" onclick="generatePractice()">生成 5 道题</button>
+    <div class="result" id="generateResult"></div>
+  </div>
+
+  <!-- 查看练习题 -->
+  <div class="card">
+    <h3>5. 查看练习题</h3>
+    <input type="number" id="pracNoteId" placeholder="输入笔记 ID">
+    <button class="btn-secondary" onclick="loadPractice()">加载题目</button>
+    <div id="practiceList"></div>
+  </div>
+
+  <!-- 提交答案 -->
+  <div class="card">
+    <h3>6. 提交答案</h3>
+    <input type="number" id="qId" placeholder="题目 ID">
+    <input type="text" id="userAnswer" placeholder="你的答案 (A/B/C/D)">
+    <button class="btn-primary" onclick="submitAnswer()">提交</button>
+    <div class="result" id="submitResult"></div>
+  </div>
+
+  <!-- 错题率统计 -->
+  <div class="card">
+    <h3>7. 错题率趋势</h3>
+    <select id="daysSelect" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:10px;">
+      <option value="7">近 7 天</option>
+      <option value="30">近 30 天</option>
+    </select>
+    <button class="btn-secondary" onclick="loadStats()">查询</button>
+    <canvas id="chartCanvas" class="chart-area"></canvas>
+    <div class="result" id="statsResult"></div>
+  </div>
+</div>
+
+<script>
+function getBase() { return document.getElementById('baseUrl').value.replace(/\/$/, ''); }
+
+function showResult(id, data, isError) {
+  const el = document.getElementById(id);
+  el.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+  el.className = 'result ' + (isError ? 'error' : 'success');
+}
+
+async function api(url, method = 'GET', body = null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body && method !== 'GET') opts.body = JSON.stringify(body);
+  const res = await fetch(getBase() + url, opts);
+  const data = await res.json();
+  if (!data.success) throw new Error(data.message);
+  return data.data;
+}
+
+// 1. 上传
+async function uploadNote() {
+  const file = document.getElementById('uploadFile').files[0];
+  if (!file) return alert('请先选择图片');
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('userId', '1');
+  try {
+    const res = await fetch(getBase() + '/api/notes/upload', { method: 'POST', body: fd });
+    const data = await res.json();
+    showResult('uploadResult', data, !data.success);
+    loadNotes();
+  } catch (e) { showResult('uploadResult', e.message, true); }
+}
+
+// 2. 列表
+async function loadNotes() {
+  try {
+    const notes = await api('/api/notes');
+    const el = document.getElementById('notesList');
+    if (!notes.length) { el.innerHTML = '<p style="color:#999;padding:10px">暂无错题</p>'; return; }
+    el.innerHTML = notes.map(n =>
+      `<div class="note-card" onclick="document.getElementById('noteId').value=${n.id};document.getElementById('genNoteId').value=${n.id};">
+        <span class="subject">${n.subject || '未分类'}</span>
+        <span style="float:right;font-size:12px;color:#999">ID:${n.id}</span>
+        <div class="content">${n.rawContent || '（未解析）'}</div>
+      </div>`
+    ).join('');
+  } catch (e) { document.getElementById('notesList').innerHTML = '<p style="color:red">' + e.message + '</p>'; }
+}
+
+// 3. 详情
+async function loadNoteDetail() {
+  const id = document.getElementById('noteId').value;
+  if (!id) return;
+  try {
+    const note = await api('/api/notes/' + id);
+    showResult('detailResult', note);
+  } catch (e) { showResult('detailResult', e.message, true); }
+}
+
+// 4. 生成练习
+async function generatePractice() {
+  const noteId = document.getElementById('genNoteId').value;
+  if (!noteId) return;
+  try {
+    const qs = await api('/api/practice/generate/' + noteId, 'POST');
+    showResult('generateResult', qs.length + ' 道题已生成');
+    loadPractice();
+  } catch (e) { showResult('generateResult', e.message, true); }
+}
+
+// 5. 查看练习
+async function loadPractice() {
+  const noteId = document.getElementById('pracNoteId').value;
+  if (!noteId) return;
+  try {
+    const qs = await api('/api/practice/list/' + noteId);
+    const el = document.getElementById('practiceList');
+    if (!qs.length) { el.innerHTML = '<p style="color:#999;padding:10px">暂无练习题</p>'; return; }
+    el.innerHTML = qs.map(q => {
+      const opts = JSON.parse(q.options || '{}');
+      return `<div class="note-card" style="border-left-color:#059669">
+        <strong>Q${q.id}</strong> ${q.questionText.substring(0, 50)}...
+        <br><small>答案: ${q.answer} ${q.isCorrect !== null ? (q.isCorrect ? '✅' : '❌') : '(未答)'}</small>
+        <br><button class="btn-secondary" style="margin-top:6px;font-size:12px;padding:4px 12px" onclick="document.getElementById('qId').value=${q.id}">答题</button>
+      </div>`;
+    }).join('');
+  } catch (e) { document.getElementById('practiceList').innerHTML = '<p style="color:red">' + e.message + '</p>'; }
+}
+
+// 6. 提交答案
+async function submitAnswer() {
+  const qId = document.getElementById('qId').value;
+  const ans = document.getElementById('userAnswer').value;
+  if (!qId || !ans) return;
+  try {
+    const result = await api('/api/practice/submit', 'POST', { questionId: Number(qId), userAnswer: ans });
+    showResult('submitResult', result);
+    loadPractice();
+  } catch (e) { showResult('submitResult', e.message, true); }
+}
+
+// 7. 统计
+async function loadStats() {
+  const days = document.getElementById('daysSelect').value;
+  try {
+    const data = await api('/api/stats/error-rate?days=' + days);
+    showResult('statsResult', data);
+    drawChart(data);
+  } catch (e) { showResult('statsResult', e.message, true); }
+}
+
+function drawChart(data) {
+  const canvas = document.getElementById('chartCanvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = rect.height;
+  const pad = { top: 20, bottom: 30, left: 40, right: 10 };
+  const cW = W - pad.left - pad.right, cH = H - pad.top - pad.bottom;
+
+  ctx.clearRect(0, 0, W, H);
+  if (!data.length) return;
+
+  const maxVal = Math.max(...data.map(d => Number(d.errorRate)), 100);
+  const step = cW / (data.length - 1 || 1);
+
+  // 网格
+  ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + cH - cH * i / 4;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+    ctx.fillStyle = '#9ca3af'; ctx.font = '11px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(Math.round(maxVal * i / 4) + '%', pad.left - 5, y + 4);
+  }
+
+  // 折线
+  ctx.strokeStyle = '#4F46E5'; ctx.lineWidth = 2; ctx.beginPath();
+  data.forEach((d, i) => {
+    const x = pad.left + i * step, y = pad.top + cH - Number(d.errorRate) / maxVal * cH;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // 点 + 标签
+  data.forEach((d, i) => {
+    const x = pad.left + i * step, y = pad.top + cH - Number(d.errorRate) / maxVal * cH;
+    ctx.fillStyle = '#4F46E5'; ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
+    if (data.length <= 15 || i % Math.ceil(data.length / 7) === 0) {
+      ctx.fillStyle = '#6b7280'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(d.date.slice(5), x, H - 8);
+    }
+  });
+}
+</script>
+</body>
+</html>

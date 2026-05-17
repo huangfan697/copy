@@ -1,0 +1,31 @@
+<view class="container">
+  <!-- 汇总卡片 -->
+  <view class="card summary-card">
+    <view class="summary-item">
+      <text class="summary-value">{{totalQuestions}}</text>
+      <text class="summary-label">总答题</text>
+    </view>
+    <view class="summary-divider"></view>
+    <view class="summary-item">
+      <text class="summary-value">{{totalCorrect}}</text>
+      <text class="summary-label">正确</text>
+    </view>
+    <view class="summary-divider"></view>
+    <view class="summary-item">
+      <text class="summary-value error">{{avgErrorRate}}%</text>
+      <text class="summary-label">错题率</text>
+    </view>
+  </view>
+
+  <!-- 时间切换 -->
+  <view class="days-switch">
+    <view class="days-btn {{days === 7 ? 'active' : ''}}" data-days="7" bindtap="onDaysChange">近7天</view>
+    <view class="days-btn {{days === 30 ? 'active' : ''}}" data-days="30" bindtap="onDaysChange">近30天</view>
+  </view>
+
+  <!-- 折线图 -->
+  <view class="card chart-card">
+    <view class="chart-title">错题率趋势</view>
+    <canvas type="2d" id="chartCanvas" class="chart-canvas" />
+  </view>
+</view>

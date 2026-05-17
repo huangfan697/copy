@@ -1,0 +1,60 @@
+<!-- 完成页 -->
+<view class="container" wx:if="{{finished}}">
+  <view class="card result-card">
+    <text class="result-title">练习完成！</text>
+    <text class="result-score">{{correctCount}} / {{questions.length}} 正确</text>
+    <text class="result-rate">正确率 {{accuracyRate}}%</text>
+  </view>
+  <button class="btn-primary" bindtap="onBackHome">返回错题本</button>
+</view>
+
+<!-- 答题页 -->
+<view class="container" wx:else>
+  <view wx:if="{{questions.length > 0}}">
+    <!-- 进度 -->
+    <view class="progress-bar">
+      <view class="progress-fill" style="width: {{progressPercent}}%"></view>
+    </view>
+    <text class="progress-text">第 {{currentIndex + 1}} / {{questions.length}} 题</text>
+
+    <!-- 题目 -->
+    <view class="card question-card">
+      <text class="question-text">{{questions[currentIndex].questionText}}</text>
+    </view>
+
+    <!-- 选项 -->
+    <view class="card options-card">
+      <view class="option-item {{selectedAnswer === key ? 'selected' : ''}}"
+            wx:for="{{questions[currentIndex].optionsObj}}"
+            wx:key="key"
+            data-answer="{{key}}"
+            bindtap="onSelectAnswer">
+        <text class="option-label">{{key}}.</text>
+        <text class="option-text">{{item}}</text>
+      </view>
+    </view>
+
+    <!-- 提交按钮 -->
+    <button class="btn-primary" bindtap="onSubmit" disabled="{{!selectedAnswer || showResult}}">
+      提交答案
+    </button>
+
+    <!-- 结果反馈 -->
+    <view class="card result-card" wx:if="{{showResult && result}}">
+      <view class="result-header {{result.correct ? 'correct' : 'wrong'}}">
+        <text>{{result.correct ? '回答正确！' : '回答错误'}}</text>
+      </view>
+      <view class="result-detail">
+        <text>正确答案：{{result.correctAnswer}}</text>
+        <text>解析：{{result.explanation}}</text>
+      </view>
+      <button class="btn-primary" bindtap="onNext">
+        {{currentIndex + 1 >= questions.length ? '查看结果' : '下一题'}}
+      </button>
+    </view>
+  </view>
+
+  <view class="empty" wx:else>
+    <text>暂无练习题，请先生成练习</text>
+  </view>
+</view>

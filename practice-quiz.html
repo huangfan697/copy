@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>错题刷题 - 教育综合</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif; background: #f0f0f5; color: #1F2937; line-height: 1.6; }
+
+    .header { background: #4F46E5; color: #fff; padding: 20px 24px; text-align: center; position: sticky; top: 0; z-index: 100; }
+    .header h1 { font-size: 20px; margin-bottom: 8px; }
+    .header .stats { font-size: 14px; opacity: 0.9; }
+
+    .progress-bar { background: rgba(255,255,255,0.3); border-radius: 4px; height: 6px; margin-top: 10px; }
+    .progress-fill { background: #fff; height: 100%; border-radius: 4px; transition: width 0.3s; }
+
+    .container { max-width: 640px; margin: 0 auto; padding: 16px; }
+
+    .question-card { background: #fff; border-radius: 16px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .question-num { background: #EEF2FF; color: #4F46E5; padding: 4px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; }
+    .question-status { font-size: 22px; }
+
+    .question-text { font-size: 16px; color: #1F2937; margin-bottom: 20px; line-height: 1.8; white-space: pre-wrap; }
+
+    .options { display: flex; flex-direction: column; gap: 10px; }
+    .option { display: flex; align-items: flex-start; padding: 14px 16px; border: 2px solid #E5E7EB; border-radius: 12px; cursor: pointer; transition: all 0.15s; }
+    .option:hover { border-color: #C7D2FE; background: #F5F3FF; }
+    .option.selected { border-color: #4F46E5; background: #EEF2FF; }
+    .option.correct { border-color: #059669; background: #ECFDF5; }
+    .option.wrong { border-color: #DC2626; background: #FEF2F2; }
+    .option.disabled { cursor: default; pointer-events: none; }
+
+    .option-label { font-weight: 600; color: #4F46E5; margin-right: 12px; flex-shrink: 0; }
+    .option-text { flex: 1; font-size: 15px; }
+
+    .result-box { margin-top: 16px; padding: 16px; border-radius: 12px; display: none; }
+    .result-box.show { display: block; }
+    .result-box.correct { background: #ECFDF5; border: 1px solid #A7F3D0; }
+    .result-box.wrong { background: #FEF2F2; border: 1px solid #FECACA; }
+    .result-title { font-weight: 600; font-size: 15px; margin-bottom: 8px; }
+    .result-box.correct .result-title { color: #059669; }
+    .result-box.wrong .result-title { color: #DC2626; }
+    .result-detail { font-size: 14px; color: #374151; }
+    .result-detail strong { color: #059669; }
+
+    .submit-btn { width: 100%; padding: 16px; background: #4F46E5; color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 16px; }
+    .submit-btn:hover { background: #4338CA; }
+    .submit-btn:disabled { background: #C7D2FE; cursor: default; }
+
+    .nav-btns { display: flex; gap: 12px; margin-top: 12px; }
+    .nav-btn { flex: 1; padding: 12px; background: #F3F4F6; color: #374151; border: none; border-radius: 10px; font-size: 14px; cursor: pointer; }
+    .nav-btn:hover { background: #E5E7EB; }
+    .nav-btn:disabled { opacity: 0.4; cursor: default; }
+
+    /* 总览页 */
+    .overview { display: none; }
+    .overview.show { display: block; }
+    .overview-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 16px; }
+    .overview-item { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; border: 2px solid #E5E7EB; background: #fff; }
+    .overview-item.current { border-color: #4F46E5; background: #EEF2FF; }
+    .overview-item.answered-correct { background: #ECFDF5; border-color: #A7F3D0; color: #059669; }
+    .overview-item.answered-wrong { background: #FEF2F2; border-color: #FECACA; color: #DC2626; }
+
+    .mode-switch { display: flex; gap: 8px; margin-bottom: 16px; }
+    .mode-btn { flex: 1; padding: 10px; background: #fff; border: 2px solid #E5E7EB; border-radius: 10px; font-size: 14px; cursor: pointer; text-align: center; }
+    .mode-btn.active { border-color: #4F46E5; background: #EEF2FF; color: #4F46E5; }
+
+    .knowledge-tag { display: inline-block; background: #EEF2FF; color: #4F46E5; padding: 4px 10px; border-radius: 6px; font-size: 12px; margin-top: 8px; }
+
+    /* 完成页 */
+    .finish-card { background: #fff; border-radius: 20px; padding: 40px 24px; text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    .finish-score { font-size: 72px; font-weight: 700; color: #4F46E5; }
+    .finish-label { font-size: 16px; color: #6B7280; margin: 8px 0 24px; }
+    .finish-stats { display: flex; justify-content: center; gap: 32px; margin-bottom: 24px; }
+    .finish-stat { text-align: center; }
+    .finish-stat-value { font-size: 28px; font-weight: 700; }
+    .finish-stat-label { font-size: 13px; color: #9CA3AF; }
+    .restart-btn { padding: 14px 48px; background: #4F46E5; color: #fff; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; }
+
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-chip { padding: 8px 14px; border-radius: 20px; font-size: 13px; background: #fff; border: 1px solid #E5E7EB; cursor: pointer; }
+    .filter-chip.active { background: #4F46E5; color: #fff; border-color: #4F46E5; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>第二章 学习及其理论解释</h1>
+  <div class="stats" id="headerStats">21 题 · 已答 0 · 正确 0</div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
+</div>
+
+<div class="container">
+  <!-- 模式切换 -->
+  <div class="mode-switch">
+    <div class="mode-btn active" data-mode="all" onclick="setMode('all')">全部</div>
+    <div class="mode-btn" data-mode="wrong" onclick="setMode('wrong')">只看错题</div>
+    <div class="mode-btn" data-mode="overview" onclick="setMode('overview')">总览</div>
+  </div>
+
+  <!-- 总览网格 -->
+  <div class="overview" id="overviewPanel">
+    <div class="question-card">
+      <h3 style="margin-bottom: 12px">题目总览</h3>
+      <div class="overview-grid" id="overviewGrid"></div>
+      <div style="margin-top: 16px; display: flex; gap: 16px; font-size: 13px; color: #6B7280;">
+        <span><span style="display:inline-block;width:12px;height:12px;background:#ECFDF5;border-radius:3px;vertical-align:middle;border:1px solid #A7F3D0"></span> 答对</span>
+        <span><span style="display:inline-block;width:12px;height:12px;background:#FEF2F2;border-radius:3px;vertical-align:middle;border:1px solid #FECACA"></span> 答错</span>
+        <span><span style="display:inline-block;width:12px;height:12px;background:#fff;border-radius:3px;vertical-align:middle;border:1px solid #E5E7EB"></span> 未答</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 题目区域 -->
+  <div id="questionArea"></div>
+</div>
+
+<script>
+const API_BASE = 'http://localhost:8080';
+const NOTE_ID = 1;
+
+let allQuestions = [];
+let currentMode = 'all';
+let currentIndex = 0;
+let filteredQuestions = [];
+let answers = {};  // { questionId: { selected, correct, showResult } }
+
+// 从后端加载题目
+async function loadQuestions() {
+  try {
+    const res = await fetch(API_BASE + '/api/practice/list/' + NOTE_ID);
+    const json = await res.json();
+    if (!json.success) { alert('加载失败: ' + json.message); return; }
+    allQuestions = json.data.map(q => ({
+      id: q.id,
+      text: q.questionText,
+      options: JSON.parse(q.options || '{}'),
+      answer: q.answer,
+      explanation: q.explanation || '',
+      knowledge: ''
+    }));
+    filteredQuestions = [...allQuestions];
+    renderQuestion();
+  } catch (e) {
+    alert('无法连接后端，请确认后端已启动: ' + e.message);
+  }
+}
+
+// 提交答案到后端
+async function submitToBackend(questionId, userAnswer) {
+  try {
+    await fetch(API_BASE + '/api/practice/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ questionId, userAnswer })
+    });
+  } catch (e) { console.warn('提交答案失败:', e); }
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  document.getElementById('overviewPanel').classList.toggle('show', mode === 'overview');
+
+  if (mode === 'all') {
+    filteredQuestions = [...allQuestions];
+  } else if (mode === 'wrong') {
+    filteredQuestions = allQuestions.filter(q => answers[q.id] && !answers[q.id].correct);
+  }
+
+  if (filteredQuestions.length === 0 && mode === 'wrong') {
+    document.getElementById('questionArea').innerHTML = '<div class="question-card"><p class="empty" style="text-align:center;padding:40px;color:#9CA3AF">暂无错题，继续加油！</p></div>';
+    return;
+  }
+
+  currentIndex = 0;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  if (currentMode === 'overview') {
+    renderOverview();
+    return;
+  }
+
+  if (filteredQuestions.length === 0) return;
+  const q = filteredQuestions[currentIndex];
+  const state = answers[q.id] || {};
+
+  const progress = Object.keys(answers).length / allQuestions.length * 100;
+  document.getElementById('progressFill').style.width = progress + '%';
+
+  const answeredCount = Object.keys(answers).length;
+  const correctCount = Object.values(answers).filter(a => a.correct).length;
+  document.getElementById('headerStats').textContent = `${allQuestions.length} 题 · 已答 ${answeredCount} · 正确 ${correctCount}`;
+
+  let optionsHTML = '';
+  const keys = ['A', 'B', 'C', 'D'];
+  keys.forEach(key => {
+    let cls = 'option';
+    if (state.showResult) {
+      cls += ' disabled';
+      if (key === q.answer) cls += ' correct';
+      else if (key === state.selected && key !== q.answer) cls += ' wrong';
+    } else if (state.selected === key) {
+      cls += ' selected';
+    }
+    optionsHTML += `<div class="${cls}" onclick="${state.showResult ? '' : `selectOption('${key}')`}">
+      <span class="option-label">${key}.</span>
+      <span class="option-text">${q.options[key]}</span>
+    </div>`;
+  });
+
+  let resultHTML = '';
+  if (state.showResult) {
+    const isCorrect = state.correct;
+    resultHTML = `<div class="result-box show ${isCorrect ? 'correct' : 'wrong'}">
+      <div class="result-title">${isCorrect ? '✅ 回答正确！' : '❌ 回答错误'}</div>
+      <div class="result-detail">
+        <div>正确答案：<strong>${q.answer}. ${q.options[q.answer]}</strong></div>
+        <div style="margin-top:8px">解析：${q.explanation}</div>
+        <div class="knowledge-tag">${q.knowledge}</div>
+      </div>
+    </div>`;
+  }
+
+  const isLast = currentIndex >= filteredQuestions.length - 1;
+  const allDone = Object.keys(answers).length === allQuestions.length;
+
+  document.getElementById('questionArea').innerHTML = `
+    <div class="question-card">
+      <div class="question-header">
+        <span class="question-num">第 ${currentIndex + 1} / ${filteredQuestions.length} 题</span>
+        <span class="question-status">${state.showResult ? (state.correct ? '✅' : '❌') : ''}</span>
+      </div>
+      <div class="question-text">${q.text}</div>
+      <div class="options">${optionsHTML}</div>
+      ${resultHTML}
+      ${!state.showResult && state.selected ? '<button class="submit-btn" onclick="submitAnswer()">提交答案</button>' : ''}
+    </div>
+    <div class="nav-btns">
+      <button class="nav-btn" onclick="prevQuestion()" ${currentIndex === 0 ? 'disabled' : ''}>上一题</button>
+      <button class="nav-btn" onclick="${isLast && allDone ? 'showFinish()' : `nextQuestion()`}">${isLast ? (allDone ? '查看结果' : '最后一题') : '下一题'}</button>
+    </div>
+  `;
+}
+
+function selectOption(key) {
+  const q = filteredQuestions[currentIndex];
+  if (!answers[q.id]) {
+    answers[q.id] = { selected: key, correct: false, showResult: false };
+  } else {
+    answers[q.id].selected = key;
+  }
+  renderQuestion();
+}
+
+function submitAnswer() {
+  const q = filteredQuestions[currentIndex];
+  const state = answers[q.id];
+  if (!state || !state.selected) return;
+  state.correct = state.selected === q.answer;
+  state.showResult = true;
+  // 同步到后端（记录错题率统计）
+  submitToBackend(q.id, state.selected);
+  renderQuestion();
+}
+
+function nextQuestion() {
+  if (currentIndex < filteredQuestions.length - 1) {
+    currentIndex++;
+    renderQuestion();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function prevQuestion() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    renderQuestion();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function renderOverview() {
+  const grid = document.getElementById('overviewGrid');
+  let html = '';
+  allQuestions.forEach(q => {
+    const state = answers[q.id];
+    let cls = 'overview-item';
+    if (state && state.showResult) {
+      cls += state.correct ? ' answered-correct' : ' answered-wrong';
+    }
+    if (q.id === (filteredQuestions[currentIndex]?.id)) cls += ' current';
+    html += `<div class="${cls}" onclick="jumpTo(${q.id})">${q.id}</div>`;
+  });
+  grid.innerHTML = html;
+}
+
+function jumpTo(id) {
+  if (currentMode === 'wrong') {
+    currentMode = 'all';
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === 'all'));
+    filteredQuestions = [...allQuestions];
+  }
+  const idx = filteredQuestions.findIndex(q => q.id === id);
+  if (idx >= 0) {
+    currentIndex = idx;
+    renderQuestion();
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showFinish() {
+  const total = allQuestions.length;
+  const correct = Object.values(answers).filter(a => a.correct).length;
+  const wrong = total - correct;
+  const pct = Math.round(correct / total * 100);
+
+  document.getElementById('questionArea').innerHTML = `
+    <div class="finish-card">
+      <div class="finish-score">${pct}%</div>
+      <div class="finish-label">正确率</div>
+      <div class="finish-stats">
+        <div class="finish-stat">
+          <div class="finish-stat-value" style="color:#4F46E5">${total}</div>
+          <div class="finish-stat-label">总题数</div>
+        </div>
+        <div class="finish-stat">
+          <div class="finish-stat-value" style="color:#059669">${correct}</div>
+          <div class="finish-stat-label">正确</div>
+        </div>
+        <div class="finish-stat">
+          <div class="finish-stat-value" style="color:#DC2626">${wrong}</div>
+          <div class="finish-stat-label">错误</div>
+        </div>
+      </div>
+      <button class="restart-btn" onclick="restart()">重新开始</button>
+      <div style="margin-top: 16px;">
+        <button class="restart-btn" style="background: #F3F4F6; color: #374151;" onclick="setMode('wrong')">只看错题</button>
+      </div>
+    </div>
+  `;
+}
+
+function restart() {
+  answers = {};
+  filteredQuestions = [...allQuestions];
+  currentIndex = 0;
+  currentMode = 'all';
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === 'all'));
+  document.getElementById('overviewPanel').classList.remove('show');
+  renderQuestion();
+}
+
+// 初始化：从后端加载
+loadQuestions();
+</script>
+</body>
+</html>

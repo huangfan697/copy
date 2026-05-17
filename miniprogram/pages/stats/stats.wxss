@@ -1,0 +1,71 @@
+.summary-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 40rpx 24rpx;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.summary-value {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #4F46E5;
+}
+
+.summary-value.error {
+  color: #DC2626;
+}
+
+.summary-label {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+.summary-divider {
+  width: 2rpx;
+  height: 60rpx;
+  background: #E5E7EB;
+}
+
+.days-switch {
+  display: flex;
+  gap: 16rpx;
+  margin: 24rpx 0;
+}
+
+.days-btn {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 0;
+  background: #fff;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #6B7280;
+}
+
+.days-btn.active {
+  background: #4F46E5;
+  color: #fff;
+}
+
+.chart-card {
+  padding: 24rpx;
+}
+
+.chart-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 20rpx;
+}
+
+.chart-canvas {
+  width: 100%;
+  height: 400rpx;
+}

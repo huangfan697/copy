@@ -1,0 +1,35 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/upload/upload",
+    "pages/detail/detail",
+    "pages/practice/practice",
+    "pages/stats/stats"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#4F46E5",
+    "navigationBarTitleText": "错题集",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F5F5F5"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#4F46E5",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "错题本",
+        "iconPath": "images/note.png",
+        "selectedIconPath": "images/note-active.png"
+      },
+      {
+        "pagePath": "pages/stats/stats",
+        "text": "统计",
+        "iconPath": "images/stats.png",
+        "selectedIconPath": "images/stats-active.png"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json"
+}

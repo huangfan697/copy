@@ -1,0 +1,13 @@
+<view class="container">
+  <view class="upload-area" bindtap="onChooseImage">
+    <image wx:if="{{imageUrl}}" class="preview" src="{{imageUrl}}" mode="aspectFit" />
+    <view wx:else class="placeholder">
+      <text class="icon">+</text>
+      <text class="hint">点击拍照或选择图片</text>
+    </view>
+  </view>
+
+  <button class="btn-primary" bindtap="onUpload" disabled="{{uploading || !imageUrl}}">
+    {{uploading ? '解析中...' : '上传并解析'}}
+  </button>
+</view>

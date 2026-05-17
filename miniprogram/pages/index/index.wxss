@@ -1,0 +1,211 @@
+.page {
+  min-height: 100vh;
+  background: #F5F5F7;
+}
+
+/* 顶部渐变背景 */
+.header-bg {
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+  padding: 60rpx 32rpx 80rpx;
+  border-radius: 0 0 40rpx 40rpx;
+}
+
+.greeting-text {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #fff;
+  display: block;
+}
+
+.date-text {
+  font-size: 26rpx;
+  color: rgba(255,255,255,0.7);
+  margin-top: 8rpx;
+  display: block;
+}
+
+/* 统计卡片 */
+.stats-row {
+  display: flex;
+  gap: 16rpx;
+  margin: -40rpx 24rpx 0;
+  position: relative;
+  z-index: 10;
+}
+
+.stat-card {
+  flex: 1;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 24rpx 16rpx;
+  text-align: center;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+}
+
+.stat-value {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #1F2937;
+  display: block;
+}
+
+.stat-value.high {
+  color: #DC2626;
+}
+
+.stat-value.streak {
+  color: #F59E0B;
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: #9CA3AF;
+  margin-top: 6rpx;
+  display: block;
+}
+
+/* 今日训练卡片 */
+.train-section {
+  margin: 32rpx 24rpx 0;
+}
+
+.train-card {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 28rpx 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+}
+
+.train-icon-wrap {
+  width: 80rpx;
+  height: 80rpx;
+  background: linear-gradient(135deg, #EEF2FF, #E0E7FF);
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.train-icon {
+  font-size: 40rpx;
+}
+
+.train-info {
+  flex: 1;
+  margin-left: 20rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.train-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.train-desc {
+  font-size: 24rpx;
+  color: #6B7280;
+}
+
+.train-hint {
+  font-size: 22rpx;
+  color: #4F46E5;
+}
+
+.train-hint.empty {
+  color: #9CA3AF;
+}
+
+.train-arrow {
+  font-size: 48rpx;
+  color: #D1D5DB;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+/* 最近错题 */
+.section {
+  padding: 32rpx 24rpx;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.section-more {
+  font-size: 26rpx;
+  color: #4F46E5;
+}
+
+.note-card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+}
+
+.note-subject {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 12rpx;
+}
+
+.note-content {
+  font-size: 26rpx;
+  color: #6B7280;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin-bottom: 12rpx;
+}
+
+.note-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.note-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.tag {
+  display: inline-block;
+  background: #EEF2FF;
+  color: #4F46E5;
+  padding: 4rpx 14rpx;
+  border-radius: 8rpx;
+  font-size: 20rpx;
+}
+
+.note-time {
+  font-size: 22rpx;
+  color: #C4C4C4;
+}
+
+.empty {
+  text-align: center;
+  padding: 80rpx 0;
+  color: #9CA3AF;
+  font-size: 28rpx;
+}
