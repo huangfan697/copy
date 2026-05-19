@@ -5,7 +5,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wrongnote.dto.ApiResponse;
 import com.wrongnote.dto.NoteParseResult;
+import com.wrongnote.entity.DailyCollection;
 import com.wrongnote.entity.WrongNote;
+import com.wrongnote.mapper.DailyCollectionMapper;
 import com.wrongnote.mapper.WrongNoteMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
@@ -21,6 +24,7 @@ import java.util.List;
 public class NoteService {
 
     private final WrongNoteMapper wrongNoteMapper;
+    private final DailyCollectionMapper dailyCollectionMapper;
     private final OssService ossService;
     private final DashScopeService dashScopeService;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -52,10 +56,42 @@ public class NoteService {
         }
         note.setStatus(0);
 
+        // 关联到今日每日栏目
+        Long collectionId = getOrCreateTodayCollection(userId);
+        note.setCollectionId(collectionId);
+
         wrongNoteMapper.insert(note);
-        log.info("错题笔记保存成功, id={}", note.getId());
+        log.info("错题笔记保存成功, id={}, collectionId={}", note.getId(), collectionId);
+
+        // 更新栏目计数
+        com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<DailyCollection> updateWrapper =
+                new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<>();
+        updateWrapper.eq(DailyCollection::getId, collectionId)
+                .setSql("note_count = note_count + 1");
+        dailyCollectionMapper.update(null, updateWrapper);
 
         return note;
+    }
+
+    /**
+     * 获取或创建今日的 daily_collection
+     */
+    private Long getOrCreateTodayCollection(Long userId) {
+        LocalDate today = LocalDate.now();
+        LambdaQueryWrapper<DailyCollection> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DailyCollection::getUserId, userId)
+                .eq(DailyCollection::getCollectionDate, today);
+        DailyCollection existing = dailyCollectionMapper.selectOne(wrapper);
+        if (existing != null) {
+            return existing.getId();
+        }
+        DailyCollection collection = new DailyCollection();
+        collection.setUserId(userId);
+        collection.setCollectionDate(today);
+        collection.setNoteCount(0);
+        collection.setQuestionCount(0);
+        dailyCollectionMapper.insert(collection);
+        return collection.getId();
     }
 
     /**

@@ -63,4 +63,25 @@
       <text>还没有错题，快去上传吧~</text>
     </view>
   </view>
+
+  <!-- 每日栏目 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">每日栏目</text>
+    </view>
+
+    <view class="collection-card" wx:for="{{collections}}" wx:key="id" bindtap="onCollectionTap" data-id="{{item.id}}">
+      <view class="collection-date">{{item.dateDisplay}}</view>
+      <view class="collection-stats">
+        <text class="stat">错题 {{item.noteCount}} 道</text>
+        <text class="stat-divider">·</text>
+        <text class="stat">练习 {{item.questionCount}} 道</text>
+      </view>
+      <view class="collection-arrow">›</view>
+    </view>
+
+    <view class="empty" wx:if="{{collections.length === 0}}">
+      <text>还没有栏目，上传错题自动生成~</text>
+    </view>
+  </view>
 </view>

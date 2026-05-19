@@ -10,6 +10,7 @@ Page({
     yesterdayWrong: 0,
     yesterdayNew: 0,
     notes: [],
+    collections: [],
     errorRateClass: ''
   },
 
@@ -22,6 +23,7 @@ Page({
     this.loadStats()
     this.loadNotes()
     this.loadTrainData()
+    this.loadCollections()
   },
 
   setDate() {
@@ -92,5 +94,24 @@ Page({
   onNoteTap(e) {
     const id = e.currentTarget.dataset.id
     wx.navigateTo({ url: `/pages/detail/detail?id=${id}` })
+  },
+
+  async loadCollections() {
+    try {
+      const collections = await api.getCollections()
+      // 格式化日期显示
+      collections.forEach(c => {
+        if (c.collectionDate) {
+          const d = new Date(c.collectionDate)
+          c.dateDisplay = `${d.getMonth() + 1}月${d.getDate()}日`
+        }
+      })
+      this.setData({ collections: collections.slice(0, 7) })
+    } catch (e) {}
+  },
+
+  onCollectionTap(e) {
+    const id = e.currentTarget.dataset.id
+    wx.navigateTo({ url: `/pages/collection/collection?id=${id}` })
   }
 })

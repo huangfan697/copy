@@ -1,0 +1,37 @@
+<view class="container">
+  <!-- 栏目信息 -->
+  <view class="card header-card" wx:if="{{collection}}">
+    <text class="date-text">{{collection.collectionDate}}</text>
+    <view class="stats-row">
+      <view class="stat-item">
+        <text class="stat-num">{{collection.noteCount}}</text>
+        <text class="stat-label">错题</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-num">{{collection.questionCount}}</text>
+        <text class="stat-label">练习</text>
+      </view>
+    </view>
+    <button class="btn-primary" bindtap="onStartTrain" wx:if="{{questions.length > 0}}">
+      开始训练（{{questions.length}}题）
+    </button>
+    <text class="empty-hint" wx:else>暂无练习题，点击错题生成练习</text>
+  </view>
+
+  <!-- 错题列表 -->
+  <view class="section">
+    <view class="section-title">该栏目错题</view>
+
+    <view class="note-card" wx:for="{{notes}}" wx:key="id" bindtap="onNoteTap" data-id="{{item.id}}">
+      <view class="note-subject">{{item.subject || '未分类'}}</view>
+      <view class="note-content">{{item.rawContent}}</view>
+      <view class="note-tags">
+        <text class="tag" wx:for="{{item.tagsList}}" wx:key="*this">{{item}}</text>
+      </view>
+    </view>
+
+    <view class="empty" wx:if="{{notes.length === 0}}">
+      <text>暂无错题</text>
+    </view>
+  </view>
+</view>

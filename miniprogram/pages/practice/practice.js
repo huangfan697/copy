@@ -16,6 +16,8 @@ Page({
   onLoad(options) {
     if (options.mode === 'today') {
       this.loadTodayQuestions()
+    } else if (options.mode === 'collection' && options.collectionId) {
+      this.loadCollectionQuestions(options.collectionId)
     } else if (options.noteId) {
       this.loadQuestions(options.noteId)
     }
@@ -44,6 +46,24 @@ Page({
     wx.showLoading({ title: '加载中' })
     try {
       const questions = await api.getTodayQuestions()
+      questions.forEach(q => {
+        try {
+          q.optionsObj = JSON.parse(q.options)
+        } catch (e) {
+          q.optionsObj = {}
+        }
+      })
+      this.setData({ questions, progressPercent: questions.length > 0 ? Math.round(100 / questions.length) : 0 })
+    } catch (e) {
+    } finally {
+      wx.hideLoading()
+    }
+  },
+
+  async loadCollectionQuestions(collectionId) {
+    wx.showLoading({ title: '加载中' })
+    try {
+      const questions = await api.getCollectionQuestions(collectionId)
       questions.forEach(q => {
         try {
           q.optionsObj = JSON.parse(q.options)

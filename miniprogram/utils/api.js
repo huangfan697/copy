@@ -81,6 +81,17 @@ module.exports = {
     return request('/api/practice/today/questions', 'GET', { userId: app.globalData.userId })
   },
 
+  // 每日栏目
+  getCollections: () => {
+    return request('/api/collections', 'GET', { userId: app.globalData.userId })
+  },
+  getCollectionDetail: (id) => {
+    return request(`/api/collections/${id}`, 'GET', { userId: app.globalData.userId })
+  },
+  getCollectionQuestions: (id) => {
+    return request(`/api/collections/${id}/questions`, 'GET', { userId: app.globalData.userId })
+  },
+
   // 统计
   getErrorRate: (days = 7) => {
     return request('/api/stats/error-rate', 'GET', { days, userId: app.globalData.userId })

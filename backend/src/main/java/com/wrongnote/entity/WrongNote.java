@@ -26,6 +26,8 @@ public class WrongNote {
 
     private Integer status;
 
+    private Long collectionId;
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 

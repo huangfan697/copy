@@ -4,6 +4,7 @@
     "pages/upload/upload",
     "pages/detail/detail",
     "pages/practice/practice",
+    "pages/collection/collection",
     "pages/stats/stats"
   ],
   "window": {

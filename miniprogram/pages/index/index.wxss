@@ -209,3 +209,45 @@
   color: #9CA3AF;
   font-size: 28rpx;
 }
+
+/* 每日栏目 */
+.collection-card {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+}
+
+.collection-date {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1F2937;
+  flex-shrink: 0;
+  width: 120rpx;
+}
+
+.collection-stats {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.collection-stats .stat {
+  font-size: 24rpx;
+  color: #6B7280;
+}
+
+.collection-stats .stat-divider {
+  color: #D1D5DB;
+}
+
+.collection-arrow {
+  font-size: 48rpx;
+  color: #D1D5DB;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
