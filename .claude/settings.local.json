@@ -37,7 +37,8 @@
       "Bash(curl -s -X POST http://newapi.raycloud.cn/v1/chat/completions -H 'Content-Type: application/json' -H 'Authorization: Bearer sk-XzUxZaRbWTTo0oUePIZuiUwyspiE4fWSSQe7fPIiV7DnUAsM' -d '{:*)",
       "Bash(curl -s -X POST 'http://localhost:8080/api/notes/upload?userId=1' -F file=@/tmp/tiny-test.jpg -H 'Accept: application/json')",
       "Bash(curl -s -X POST 'http://localhost:8080/api/notes/upload?userId=1' -F file=@/tmp/test-wrong-note-small.jpg -H 'Accept: application/json')",
-      "Bash(curl -s -X POST 'http://localhost:8080/api/practice/generate/7?userId=1' -H 'Accept: application/json')"
+      "Bash(curl -s -X POST 'http://localhost:8080/api/practice/generate/7?userId=1' -H 'Accept: application/json')",
+      "Bash(curl:*)"
     ]
   }
 }

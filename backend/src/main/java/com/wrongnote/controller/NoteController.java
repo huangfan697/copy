@@ -18,14 +18,14 @@ public class NoteController {
     private final NoteService noteService;
 
     /**
-     * 上传错题图片并自动解析
+     * 上传错题图片（异步 AI 解析，立即返回）
      */
     @PostMapping("/upload")
     public ApiResponse<WrongNote> upload(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "userId", defaultValue = "1") Long userId) {
         try {
-            WrongNote note = noteService.uploadAndParse(file, userId);
+            WrongNote note = noteService.uploadImage(file, userId);
             return ApiResponse.ok(note);
         } catch (Exception e) {
             return ApiResponse.fail("上传失败: " + e.getMessage());

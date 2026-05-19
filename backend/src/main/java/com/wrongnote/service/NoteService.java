@@ -11,12 +11,11 @@ import com.wrongnote.mapper.DailyCollectionMapper;
 import com.wrongnote.mapper.WrongNoteMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -31,52 +30,107 @@ public class NoteService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
-     * 上传错题图片并自动解析
+     * 上传错题图片：只保存图片，立即返回，AI 解析异步执行
+     * 返回的 note status = -1 表示解析中
      */
-    @Transactional
-    public WrongNote uploadAndParse(MultipartFile file, Long userId) throws Exception {
-        // 1. 上传图片到 OSS
+    public WrongNote uploadImage(MultipartFile file, Long userId) throws Exception {
         String imageUrl = ossService.uploadImage(file);
         log.info("图片上传成功: {}", imageUrl);
 
-        // 2. 调用 AI 解析
-        List<NoteParseResult> results = dashScopeService.parseWrongNote(imageUrl);
-        log.info("AI 解析结果: 共 {} 道错题", results.size());
-
-        // 3. 保存为错题笔记
-        List<WrongNote> savedNotes = new ArrayList<>();
+        // 关联到今日每日栏目
         Long collectionId = getOrCreateTodayCollection(userId);
-        for (NoteParseResult result : results) {
-            log.info("AI 解析错题: subject={}, tags={}", result.getSubject(), result.getTags());
-            WrongNote note = new WrongNote();
-            note.setUserId(userId);
-            note.setImageUrl(imageUrl);
-            note.setSubject(result.getSubject());
-            note.setRawContent(result.getContent());
-            note.setCorrectAnswer(result.getCorrectAnswer());
-            note.setAnalysis(result.getAnalysis());
+
+        // 创建一条 status=-1 的待解析记录
+        WrongNote note = new WrongNote();
+        note.setUserId(userId);
+        note.setImageUrl(imageUrl);
+        note.setStatus(-1); // -1 = 解析中
+        note.setCollectionId(collectionId);
+        note.setSubject("解析中...");
+        note.setRawContent("");
+        wrongNoteMapper.insert(note);
+        log.info("待解析记录创建成功, id={}", note.getId());
+
+        // 异步触发 AI 解析
+        parseAndSaveAsync(note.getId(), userId);
+
+        return note;
+    }
+
+    /**
+     * 异步 AI 解析并保存错题
+     */
+    @Async
+    public void parseAndSaveAsync(Long noteId, Long userId) {
+        WrongNote note = wrongNoteMapper.selectById(noteId);
+        if (note == null) {
+            log.warn("异步解析时 note 不存在: {}", noteId);
+            return;
+        }
+
+        try {
+            List<NoteParseResult> results = dashScopeService.parseWrongNote(note.getImageUrl());
+            log.info("AI 解析结果: noteId={}, 共 {} 道错题", noteId, results.size());
+
+            if (results.isEmpty()) {
+                // 没识别到错题，更新为提示
+                note.setStatus(0);
+                note.setSubject("未识别到错题");
+                note.setRawContent("未检测到红线标记的错题，请确保图片中有明确的错题标记");
+                wrongNoteMapper.updateById(note);
+                return;
+            }
+
+            // 更新第一条为解析结果
+            NoteParseResult first = results.get(0);
+            note.setSubject(first.getSubject());
+            note.setRawContent(first.getContent());
+            note.setCorrectAnswer(first.getCorrectAnswer());
+            note.setAnalysis(first.getAnalysis());
             try {
-                note.setKnowledgeTags(objectMapper.writeValueAsString(result.getTags()));
+                note.setKnowledgeTags(objectMapper.writeValueAsString(first.getTags()));
             } catch (JsonProcessingException e) {
                 note.setKnowledgeTags("[]");
             }
             note.setStatus(0);
-            note.setCollectionId(collectionId);
-            wrongNoteMapper.insert(note);
-            log.info("错题笔记保存成功, id={}, collectionId={}", note.getId(), collectionId);
-            savedNotes.add(note);
-        }
+            wrongNoteMapper.updateById(note);
 
-        // 更新栏目计数
-        if (!savedNotes.isEmpty()) {
+            // 多余错题另存为独立记录
+            for (int i = 1; i < results.size(); i++) {
+                NoteParseResult r = results.get(i);
+                WrongNote extra = new WrongNote();
+                extra.setUserId(userId);
+                extra.setImageUrl(note.getImageUrl());
+                extra.setSubject(r.getSubject());
+                extra.setRawContent(r.getContent());
+                extra.setCorrectAnswer(r.getCorrectAnswer());
+                extra.setAnalysis(r.getAnalysis());
+                try {
+                    extra.setKnowledgeTags(objectMapper.writeValueAsString(r.getTags()));
+                } catch (JsonProcessingException e) {
+                    extra.setKnowledgeTags("[]");
+                }
+                extra.setStatus(0);
+                extra.setCollectionId(note.getCollectionId());
+                wrongNoteMapper.insert(extra);
+            }
+
+            // 更新栏目计数
+            int totalNotes = results.size();
             com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<DailyCollection> updateWrapper =
                     new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<>();
-            updateWrapper.eq(DailyCollection::getId, collectionId)
-                    .setSql("note_count = note_count + " + savedNotes.size());
+            updateWrapper.eq(DailyCollection::getId, note.getCollectionId())
+                    .setSql("note_count = note_count + " + totalNotes);
             dailyCollectionMapper.update(null, updateWrapper);
-        }
 
-        return savedNotes.isEmpty() ? null : savedNotes.get(0);
+            log.info("AI 解析完成, noteId={}, saved {} notes", noteId, totalNotes);
+        } catch (Exception e) {
+            log.error("AI 解析失败, noteId={}", noteId, e);
+            note.setStatus(-2); // -2 = 解析失败
+            note.setSubject("解析失败");
+            note.setRawContent("AI 解析出错: " + e.getMessage());
+            wrongNoteMapper.updateById(note);
+        }
     }
 
     /**
