@@ -27,7 +27,8 @@ aliyun:
     bucket-name: ${OSS_BUCKET_NAME:wrong-note}
     url-prefix: ${OSS_URL_PREFIX:https://wrong-note.oss-cn-hangzhou.aliyuncs.com/}
 
-# 通义千问 DashScope 配置
+# 通义千问 API 配置
 dashscope:
-  api-key: ${DASHSCOPE_API_KEY:}
-  model: qwen-vl-plus
+  base-url: ${DASHSCOPE_BASE_URL:http://newapi.raycloud.cn}
+  api-key: ${DASHSCOPE_API_KEY:sk-XzUxZaRbWTTo0oUePIZuiUwyspiE4fWSSQe7fPIiV7DnUAsM}
+  model: ${DASHSCOPE_MODEL:qwen3.6-plus}

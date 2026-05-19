@@ -8,6 +8,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class DashScopeConfig {
 
+    @Value("${dashscope.base-url:https://dashscope.aliyuncs.com/compatible-mode}")
+    private String baseUrl;
+
     @Value("${dashscope.api-key:}")
     private String apiKey;
 

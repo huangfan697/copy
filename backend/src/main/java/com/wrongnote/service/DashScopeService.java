@@ -1,20 +1,17 @@
 package com.wrongnote.service;
 
-import com.alibaba.dashscope.aigc.multimodalconversation.MultiModalConversation;
-import com.alibaba.dashscope.aigc.multimodalconversation.MultiModalConversationOutput;
-import com.alibaba.dashscope.aigc.multimodalconversation.MultiModalConversationParam;
-import com.alibaba.dashscope.aigc.multimodalconversation.MultiModalConversationResult;
-import com.alibaba.dashscope.common.MultiModalMessage;
-import com.alibaba.dashscope.common.Role;
-import com.wrongnote.config.DashScopeConfig;
-import com.wrongnote.dto.NoteParseResult;
-import com.wrongnote.dto.PracticeQuestionDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wrongnote.config.DashScopeConfig;
+import com.wrongnote.dto.NoteParseResult;
+import com.wrongnote.dto.PracticeQuestionDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 
@@ -25,9 +22,10 @@ public class DashScopeService {
 
     private final DashScopeConfig dashScopeConfig;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final RestTemplate restTemplate = new RestTemplate();
 
     /**
-     * 解析错题图片：调用通义千问 VL 模型识别图片中的题目
+     * 解析错题图片：只提取被标记为错误的题目
      */
     public NoteParseResult parseWrongNote(String imageUrl) {
         String systemPrompt = "你是一位经验丰富的老师。请仔细分析图片中每一道题，只提取用户标记为错误的题目（例如：答案被划掉/划红线、旁边手写了正确答案、打了叉等）。"
@@ -57,115 +55,72 @@ public class DashScopeService {
     }
 
     private String callVisionModel(String systemPrompt, String imageUrl) {
-        MultiModalConversation conv = new MultiModalConversation();
+        List<Map<String, Object>> systemContent = List.of(Map.of("type", "text", "text", systemPrompt));
+        List<Map<String, Object>> userContent = Arrays.asList(
+                Map.of("type", "text", "text", "请识别这张图片中的错题，只返回被标记错误的题目"),
+                Map.of("type", "image_url", "image_url", Map.of("url", imageUrl))
+        );
 
-        Map<String, Object> imageContent = new HashMap<>();
-        imageContent.put("image", imageUrl);
+        List<Map<String, Object>> messages = Arrays.asList(
+                Map.of("role", "system", "content", systemContent),
+                Map.of("role", "user", "content", userContent)
+        );
 
-        MultiModalMessage systemMessage = MultiModalMessage.builder()
-                .role(Role.SYSTEM.getValue())
-                .content(Collections.singletonList(Collections.singletonMap("text", systemPrompt)))
-                .build();
+        Map<String, Object> body = Map.of(
+                "model", dashScopeConfig.getModel(),
+                "messages", messages,
+                "max_tokens", 4096
+        );
 
-        MultiModalMessage userMessage = MultiModalMessage.builder()
-                .role(Role.USER.getValue())
-                .content(Arrays.asList(
-                        Collections.singletonMap("text", "请识别这张图片中的题目"),
-                        imageContent
-                ))
-                .build();
-
-        MultiModalConversationParam param = MultiModalConversationParam.builder()
-                .apiKey(dashScopeConfig.getApiKey())
-                .model(dashScopeConfig.getModel())
-                .messages(Arrays.asList(systemMessage, userMessage))
-                .build();
-
-        try {
-            MultiModalConversationResult result = conv.call(param);
-            return extractTextFromResult(result);
-        } catch (Exception e) {
-            log.error("调用通义千问 VL 失败", e);
-            throw new RuntimeException("AI 解析失败: " + e.getMessage(), e);
-        }
+        return postJson(body);
     }
 
     private String callTextModel(String systemPrompt, String userPrompt) {
-        MultiModalConversation conv = new MultiModalConversation();
+        List<Map<String, Object>> systemContent = List.of(Map.of("type", "text", "text", systemPrompt));
+        List<Map<String, Object>> userContent = List.of(Map.of("type", "text", "text", userPrompt));
 
-        MultiModalMessage systemMessage = MultiModalMessage.builder()
-                .role(Role.SYSTEM.getValue())
-                .content(Collections.singletonList(Collections.singletonMap("text", systemPrompt)))
-                .build();
+        List<Map<String, Object>> messages = Arrays.asList(
+                Map.of("role", "system", "content", systemContent),
+                Map.of("role", "user", "content", userContent)
+        );
 
-        MultiModalMessage userMessage = MultiModalMessage.builder()
-                .role(Role.USER.getValue())
-                .content(Collections.singletonList(Collections.singletonMap("text", userPrompt)))
-                .build();
+        Map<String, Object> body = Map.of(
+                "model", dashScopeConfig.getModel(),
+                "messages", messages,
+                "max_tokens", 4096
+        );
 
-        MultiModalConversationParam param = MultiModalConversationParam.builder()
-                .apiKey(dashScopeConfig.getApiKey())
-                .model(dashScopeConfig.getModel())
-                .messages(Arrays.asList(systemMessage, userMessage))
-                .build();
-
-        try {
-            MultiModalConversationResult result = conv.call(param);
-            return extractTextFromResult(result);
-        } catch (Exception e) {
-            log.error("调用通义千问生成题目失败", e);
-            throw new RuntimeException("AI 生成题目失败: " + e.getMessage(), e);
-        }
+        return postJson(body);
     }
 
-    private String extractTextFromResult(MultiModalConversationResult result) {
-        if (result == null || result.getOutput() == null) {
-            throw new RuntimeException("AI 返回结果为空");
-        }
+    private String postJson(Map<String, Object> body) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(dashScopeConfig.getApiKey());
 
-        MultiModalConversationOutput output = result.getOutput();
-        if (output.getChoices() == null || output.getChoices().isEmpty()) {
+        String url = dashScopeConfig.getBaseUrl() + "/v1/chat/completions";
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, request, Map.class);
+            Map<String, Object> responseBody = response.getBody();
+            if (responseBody != null && responseBody.containsKey("choices")) {
+                List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
+                if (!choices.isEmpty()) {
+                    Map<String, Object> choice = choices.get(0);
+                    Map<String, Object> message = (Map<String, Object>) choice.get("message");
+                    return (String) message.get("content");
+                }
+            }
             throw new RuntimeException("AI 返回结果中没有 choices");
+        } catch (RestClientException e) {
+            log.error("调用 AI 模型失败", e);
+            throw new RuntimeException("AI 调用失败: " + e.getMessage(), e);
         }
-
-        var choice = output.getChoices().get(0);
-        if (choice.getMessage() == null || choice.getMessage().getContent() == null) {
-            throw new RuntimeException("AI 返回结果中没有 message");
-        }
-
-        var content = choice.getMessage().getContent();
-        for (Object item : content) {
-            if (item instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> map = (Map<String, Object>) item;
-                if (map.containsKey("text")) {
-                    Object text = map.get("text");
-                    if (text != null) {
-                        return text.toString();
-                    }
-                }
-            }
-        }
-
-        // Fallback
-        for (Object item : content) {
-            if (item instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> map = (Map<String, Object>) item;
-                for (Object value : map.values()) {
-                    if (value instanceof String s && !s.isEmpty()) {
-                        return s;
-                    }
-                }
-            }
-        }
-
-        throw new RuntimeException("无法从 AI 返回结果中提取文本");
     }
 
     private <T> T parseJsonResponse(String response, Class<T> clazz) {
         try {
-            // 尝试从 markdown code block 中提取 JSON
             String json = extractJson(response);
             return objectMapper.readValue(json, clazz);
         } catch (JsonProcessingException e) {
@@ -190,14 +145,12 @@ public class DashScopeService {
     }
 
     private String extractJson(String response) {
-        // 处理 markdown code block: ```json ... ```
         int start = response.indexOf("```");
         if (start >= 0) {
             int jsonStart = response.indexOf('\n', start) + 1;
             int end = response.indexOf("```", jsonStart);
             if (end > jsonStart) {
                 String inner = response.substring(jsonStart, end).trim();
-                // 去掉可能的 "json" 前缀
                 if (inner.startsWith("json")) {
                     inner = inner.substring(4).trim();
                 }
