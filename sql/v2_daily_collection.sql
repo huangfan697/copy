@@ -14,3 +14,6 @@ CREATE TABLE IF NOT EXISTS daily_collection (
 -- wrong_note 表新增 collection_id
 ALTER TABLE wrong_note ADD COLUMN collection_id BIGINT DEFAULT NULL COMMENT '所属每日栏目ID';
 ALTER TABLE wrong_note ADD INDEX idx_collection_id (collection_id);
+
+-- wrong_note 表新增正确答案字段
+ALTER TABLE wrong_note ADD COLUMN correct_answer VARCHAR(255) DEFAULT NULL COMMENT '正确答案';

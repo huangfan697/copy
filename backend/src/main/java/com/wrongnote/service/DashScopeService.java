@@ -30,8 +30,10 @@ public class DashScopeService {
      * 解析错题图片：调用通义千问 VL 模型识别图片中的题目
      */
     public NoteParseResult parseWrongNote(String imageUrl) {
-        String systemPrompt = "你是一位经验丰富的老师。请识别图片中的题目内容，并严格按照以下 JSON 格式返回结果，不要包含其他文字：\n"
-                + "{\"subject\":\"科目名称\",\"content\":\"题目文本，公式用LaTeX格式\",\"analysis\":\"解题思路和关键点分析\",\"tags\":[\"知识点1\",\"知识点2\"]}";
+        String systemPrompt = "你是一位经验丰富的老师。请仔细分析图片中每一道题，只提取用户标记为错误的题目（例如：答案被划掉/划红线、旁边手写了正确答案、打了叉等）。"
+                + "如果一张图包含多道错题，请返回数组格式；如果只有单道错题，返回单个 JSON 对象。\n"
+                + "只提取错题，答对的题目不要返回。\n"
+                + "每道题格式：{\"subject\":\"科目名称\",\"content\":\"题目完整文本，公式用LaTeX\",\"userAnswer\":\"用户写的答案（如有）\",\"correctAnswer\":\"红线标注的正确答案\",\"analysis\":\"解题思路和关键点分析\",\"tags\":[\"知识点1\",\"知识点2\"]}";
 
         String result = callVisionModel(systemPrompt, imageUrl);
         return parseJsonResponse(result, NoteParseResult.class);

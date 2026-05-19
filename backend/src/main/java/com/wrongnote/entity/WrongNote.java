@@ -22,6 +22,8 @@ public class WrongNote {
 
     private String rawContent;
 
+    private String correctAnswer;
+
     private String analysis;
 
     private Integer status;

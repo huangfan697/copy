@@ -48,6 +48,7 @@ public class NoteService {
         note.setImageUrl(imageUrl);
         note.setSubject(result.getSubject());
         note.setRawContent(result.getContent());
+        note.setCorrectAnswer(result.getCorrectAnswer());
         note.setAnalysis(result.getAnalysis());
         try {
             note.setKnowledgeTags(objectMapper.writeValueAsString(result.getTags()));

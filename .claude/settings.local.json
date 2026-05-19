@@ -14,7 +14,18 @@
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f'今日训练题数: {len\\(d[\\\\\"data\\\\\"]\\)}'\\)\")",
       "Bash(git init:*)",
       "Bash(git remote:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(gh auth:*)",
+      "Bash(git pull:*)",
+      "Bash(mvn compile:*)",
+      "mcp__sql-query__list_instances",
+      "Bash(mysql:*)",
+      "Bash(pip3 install:*)",
+      "Bash(python3:*)",
+      "WebSearch",
+      "WebFetch(domain:help.aliyun.com)"
     ]
   }
 }
