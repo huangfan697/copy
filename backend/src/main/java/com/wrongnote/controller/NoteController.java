@@ -4,11 +4,13 @@ import com.wrongnote.dto.ApiResponse;
 import com.wrongnote.entity.WrongNote;
 import com.wrongnote.service.NoteService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/notes")
@@ -33,7 +35,7 @@ public class NoteController {
     }
 
     /**
-     * 查询用户错题列表
+     * 查询用户错题列表（不返回 imageUrl，避免大量数据传输）
      */
     @GetMapping("")
     public ApiResponse<List<WrongNote>> list(
@@ -41,6 +43,8 @@ public class NoteController {
             @RequestParam(required = false) String subject,
             @RequestParam(required = false) Integer status) {
         List<WrongNote> notes = noteService.listByUser(userId, subject, status);
+        // 清空 imageUrl，列表不需要传输大图片 base64
+        notes.forEach(n -> n.setImageUrl(null));
         return ApiResponse.ok(notes);
     }
 

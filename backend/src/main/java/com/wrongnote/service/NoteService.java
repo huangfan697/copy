@@ -160,6 +160,8 @@ public class NoteService {
     public List<WrongNote> listByUser(Long userId, String subject, Integer status) {
         LambdaQueryWrapper<WrongNote> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(WrongNote::getUserId, userId);
+        // 列表查询排除 imageUrl，避免传输大量 base64 图片数据
+        wrapper.select(WrongNote.class, info -> !"image_url".equals(info.getColumn()));
         if (subject != null && !subject.isEmpty()) {
             wrapper.eq(WrongNote::getSubject, subject);
         }
