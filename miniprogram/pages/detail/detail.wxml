@@ -1,7 +1,7 @@
 <view class="container" wx:if="{{note}}">
   <!-- 原图 -->
   <view class="card">
-    <image class="note-image" src="{{note.imageUrl}}" mode="widthFix" />
+    <image class="note-image" src="{{note.imageUrl}}" mode="aspectFill" bindtap="onPreviewImage" />
   </view>
 
   <!-- 解析结果 -->

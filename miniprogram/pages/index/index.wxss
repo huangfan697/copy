@@ -5,7 +5,7 @@
 
 /* 顶部渐变背景 */
 .header-bg {
-  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+  background: linear-gradient(135deg, #0D9488 0%, #0F766E 100%);
   padding: 60rpx 32rpx 80rpx;
   border-radius: 0 0 40rpx 40rpx;
 }
@@ -74,19 +74,20 @@
   align-items: center;
   background: #fff;
   border-radius: 20rpx;
-  padding: 28rpx 24rpx;
+  padding: 20rpx 24rpx;
   box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
 }
 
 .train-icon-wrap {
   width: 80rpx;
   height: 80rpx;
-  background: linear-gradient(135deg, #EEF2FF, #E0E7FF);
+  background: linear-gradient(135deg, #F0FDFA, #CCFBF1);
   border-radius: 20rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  line-height: 80rpx;
 }
 
 .train-icon {
@@ -95,10 +96,30 @@
 
 .train-info {
   flex: 1;
-  margin-left: 20rpx;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8rpx;
+}
+
+.train-icon-title {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6rpx;
+  gap: 2rpx;
+}
+
+.train-bottom {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.train-hint {
+  font-size: 20rpx;
+  color: #0D9488;
+  line-height: 1;
 }
 
 .train-title {
@@ -112,11 +133,6 @@
   color: #6B7280;
 }
 
-.train-hint {
-  font-size: 22rpx;
-  color: #4F46E5;
-}
-
 .train-hint.empty {
   color: #9CA3AF;
 }
@@ -125,7 +141,6 @@
   font-size: 48rpx;
   color: #D1D5DB;
   flex-shrink: 0;
-  margin-left: 16rpx;
 }
 
 /* 最近错题 */
@@ -148,7 +163,7 @@
 
 .section-more {
   font-size: 26rpx;
-  color: #4F46E5;
+  color: #0D9488;
 }
 
 .note-card {
@@ -191,8 +206,8 @@
 
 .tag {
   display: inline-block;
-  background: #EEF2FF;
-  color: #4F46E5;
+  background: #F0FDFA;
+  color: #0D9488;
   padding: 4rpx 14rpx;
   border-radius: 8rpx;
   font-size: 20rpx;
@@ -200,7 +215,11 @@
 
 .note-time {
   font-size: 22rpx;
-  color: #C4C4C4;
+  color: #9CA3AF;
+  background: #F3F4F6;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  flex-shrink: 0;
 }
 
 .empty {

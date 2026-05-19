@@ -35,5 +35,5 @@ dashscope:
 
 # 微信小程序配置
 wechat:
-  app-id: ${WECHAT_APP_ID:}
-  app-secret: ${WECHAT_APP_SECRET:}
+  app-id: ${WECHAT_APP_ID:wx2ac2f831477f1535}
+  app-secret: ${WECHAT_APP_SECRET:08b171cf9c298a1f632dd7fb2daa0b37}

@@ -8,7 +8,7 @@
 
 .progress-fill {
   height: 100%;
-  background: #4F46E5;
+  background: #0D9488;
   border-radius: 4rpx;
   transition: width 0.3s;
 }
@@ -45,14 +45,14 @@
 }
 
 .option-item.selected {
-  border-color: #4F46E5;
-  background: #EEF2FF;
+  border-color: #0D9488;
+  background: #F0FDFA;
 }
 
 .option-label {
   font-size: 28rpx;
   font-weight: 600;
-  color: #4F46E5;
+  color: #0D9488;
   margin-right: 16rpx;
 }
 
@@ -109,7 +109,7 @@
 
 .result-card .result-score {
   font-size: 32rpx;
-  color: #4F46E5;
+  color: #0D9488;
   display: block;
   margin-bottom: 8rpx;
 }

@@ -45,5 +45,12 @@ Page({
         wx.showToast({ title: '已标记为掌握', icon: 'success' })
         this.setData({ 'note.status': 1 })
       })
+  },
+
+  onPreviewImage() {
+    wx.previewImage({
+      current: this.data.note.imageUrl,
+      urls: [this.data.note.imageUrl]
+    })
   }
 })

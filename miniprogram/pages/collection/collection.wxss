@@ -36,7 +36,7 @@
 .stat-num {
   font-size: 40rpx;
   font-weight: 700;
-  color: #4F46E5;
+  color: #0D9488;
 }
 
 .stat-label {
@@ -95,8 +95,8 @@
 
 .tag {
   display: inline-block;
-  background: #EEF2FF;
-  color: #4F46E5;
+  background: #F0FDFA;
+  color: #0D9488;
   padding: 4rpx 14rpx;
   border-radius: 8rpx;
   font-size: 20rpx;

@@ -19,8 +19,18 @@ scp -i $SSH_KEY -o StrictHostKeyChecking=no \
   docker-compose.yml \
   $SERVER:$REMOTE_DIR/
 
-echo "=== 4. 远程部署 ==="
-ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SERVER "cd $REMOTE_DIR && docker compose down 2>/dev/null; docker compose up -d --build"
+echo "=== 4. 停止旧服务 ==="
+ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SERVER "cd $REMOTE_DIR && docker compose down --timeout 30 2>/dev/null || true"
+echo "等待容器完全停止..."
+sleep 3
+
+echo "=== 5. 启动新服务 ==="
+ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SERVER "cd $REMOTE_DIR && docker compose up -d --build"
+
+echo "=== 6. 等待服务启动 ==="
+sleep 5
+
+echo "=== 7. 检查服务状态 ==="
+ssh -i $SSH_KEY $SERVER "docker ps | grep wrong-note-backend"
 
 echo "=== 部署完成 ==="
-ssh -i $SSH_KEY $SERVER "docker ps | grep wrong-note-backend"

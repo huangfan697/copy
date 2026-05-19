@@ -1,5 +1,6 @@
 App({
   globalData: {
+    // baseUrl: 'http://192.168.0.102:8080',
     baseUrl: 'https://book.wangjuxing.cn',
     userId: 1,
     token: ''

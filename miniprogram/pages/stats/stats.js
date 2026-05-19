@@ -95,7 +95,7 @@ Page({
         }
 
         // 绘制折线
-        ctx.strokeStyle = '#4F46E5'
+        ctx.strokeStyle = '#0D9488'
         ctx.lineWidth = 2
         ctx.beginPath()
         data.forEach((d, i) => {
@@ -111,7 +111,7 @@ Page({
           const x = padding.left + i * stepX
           const y = padding.top + chartH - (d.value / maxVal * chartH)
 
-          ctx.fillStyle = '#4F46E5'
+          ctx.fillStyle = '#0D9488'
           ctx.beginPath()
           ctx.arc(x, y, 4, 0, Math.PI * 2)
           ctx.fill()

@@ -15,7 +15,7 @@
 .summary-value {
   font-size: 48rpx;
   font-weight: 700;
-  color: #4F46E5;
+  color: #0D9488;
 }
 
 .summary-value.error {
@@ -50,7 +50,7 @@
 }
 
 .days-btn.active {
-  background: #4F46E5;
+  background: #0D9488;
   color: #fff;
 }
 

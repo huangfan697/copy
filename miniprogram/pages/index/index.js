@@ -69,11 +69,22 @@ Page({
     }
   },
 
+  formatTime(dateStr) {
+    if (!dateStr) return ''
+    const d = new Date(dateStr)
+    const month = d.getMonth() + 1
+    const day = d.getDate()
+    const hour = d.getHours().toString().padStart(2, '0')
+    const min = d.getMinutes().toString().padStart(2, '0')
+    return `${month}月${day}日 ${hour}:${min}`
+  },
+
   async loadNotes() {
     try {
       const notes = await api.getNotes({ status: 0 })
       notes.forEach(n => {
         try { n.tagsList = n.knowledgeTags ? JSON.parse(n.knowledgeTags) : [] } catch (e) { n.tagsList = [] }
+        n.createdAt = this.formatTime(n.createdAt)
       })
       this.setData({ notes: notes.slice(0, 5) })
     } catch (e) {}

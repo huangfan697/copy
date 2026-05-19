@@ -16,7 +16,7 @@ page {
 }
 
 .btn-primary {
-  background: #4F46E5;
+  background: #0D9488;
   color: #fff;
   border-radius: 12rpx;
   padding: 20rpx 0;
@@ -39,8 +39,8 @@ page {
 
 .tag {
   display: inline-block;
-  background: #EEF2FF;
-  color: #4F46E5;
+  background: #F0FDFA;
+  color: #0D9488;
   padding: 6rpx 16rpx;
   border-radius: 8rpx;
   font-size: 22rpx;

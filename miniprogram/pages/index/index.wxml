@@ -2,8 +2,8 @@
   <!-- 顶部渐变背景 -->
   <view class="header-bg">
     <view class="greeting">
-      <text class="greeting-text">早上好 👋</text>
-      <text class="date-text">{{todayDate}}</text>
+      <!-- <text class="greeting-text">早上好 👋</text>
+      <text class="date-text">{{todayDate}}</text> -->
     </view>
   </view>
 
@@ -26,18 +26,23 @@
   <!-- 今日训练按钮 -->
   <view class="train-section">
     <view class="train-card" bindtap="onStartTrain">
-      <view class="train-icon-wrap">
-        <view class="train-icon">📝</view>
-      </view>
+
       <view class="train-info">
-        <text class="train-title">开始今日训练</text>
-        <text class="train-desc">共 {{trainCount}} 道题</text>
-        <text class="train-hint" wx:if="{{trainCount > 0}}">
-          昨日错题 {{yesterdayWrong}} + 新导入 {{yesterdayNew}}
-        </text>
-        <text class="train-hint empty" wx:else>暂无题目，先去上传错题吧</text>
+        <view class="train-icon-wrap">
+          <view class="train-icon">📝</view>
+        </view>
+        <view class="train-icon-title">
+          <text class="train-title">开始今日训练</text>
+          <text class="train-desc">共 {{trainCount}} 道题</text>
+        </view>
+        <view class="train-bottom">
+          <text class="train-hint" wx:if="{{trainCount > 0}}">
+            昨日错题 {{yesterdayWrong}} + 新导入 {{yesterdayNew}}
+          </text>
+          <text class="train-hint empty" wx:else>暂无题目，先去上传错题吧</text>
+          <text class="train-arrow">›</text>
+        </view>
       </view>
-      <view class="train-arrow">›</view>
     </view>
   </view>
 
