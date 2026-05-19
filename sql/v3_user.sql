@@ -1,0 +1,9 @@
+-- 用户表：openid → BIGINT 映射
+CREATE TABLE IF NOT EXISTS user (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    openid VARCHAR(64) UNIQUE NOT NULL COMMENT '微信openid',
+    nickname VARCHAR(64) DEFAULT NULL,
+    avatar_url VARCHAR(512) DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_openid (openid)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
