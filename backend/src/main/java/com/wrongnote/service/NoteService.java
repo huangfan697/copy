@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -39,39 +40,43 @@ public class NoteService {
         log.info("图片上传成功: {}", imageUrl);
 
         // 2. 调用 AI 解析
-        NoteParseResult result = dashScopeService.parseWrongNote(imageUrl);
-        log.info("AI 解析结果: subject={}, tags={}", result.getSubject(), result.getTags());
+        List<NoteParseResult> results = dashScopeService.parseWrongNote(imageUrl);
+        log.info("AI 解析结果: 共 {} 道错题", results.size());
 
-        // 3. 保存到数据库
-        WrongNote note = new WrongNote();
-        note.setUserId(userId);
-        note.setImageUrl(imageUrl);
-        note.setSubject(result.getSubject());
-        note.setRawContent(result.getContent());
-        note.setCorrectAnswer(result.getCorrectAnswer());
-        note.setAnalysis(result.getAnalysis());
-        try {
-            note.setKnowledgeTags(objectMapper.writeValueAsString(result.getTags()));
-        } catch (JsonProcessingException e) {
-            note.setKnowledgeTags("[]");
-        }
-        note.setStatus(0);
-
-        // 关联到今日每日栏目
+        // 3. 保存为错题笔记
+        List<WrongNote> savedNotes = new ArrayList<>();
         Long collectionId = getOrCreateTodayCollection(userId);
-        note.setCollectionId(collectionId);
-
-        wrongNoteMapper.insert(note);
-        log.info("错题笔记保存成功, id={}, collectionId={}", note.getId(), collectionId);
+        for (NoteParseResult result : results) {
+            log.info("AI 解析错题: subject={}, tags={}", result.getSubject(), result.getTags());
+            WrongNote note = new WrongNote();
+            note.setUserId(userId);
+            note.setImageUrl(imageUrl);
+            note.setSubject(result.getSubject());
+            note.setRawContent(result.getContent());
+            note.setCorrectAnswer(result.getCorrectAnswer());
+            note.setAnalysis(result.getAnalysis());
+            try {
+                note.setKnowledgeTags(objectMapper.writeValueAsString(result.getTags()));
+            } catch (JsonProcessingException e) {
+                note.setKnowledgeTags("[]");
+            }
+            note.setStatus(0);
+            note.setCollectionId(collectionId);
+            wrongNoteMapper.insert(note);
+            log.info("错题笔记保存成功, id={}, collectionId={}", note.getId(), collectionId);
+            savedNotes.add(note);
+        }
 
         // 更新栏目计数
-        com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<DailyCollection> updateWrapper =
-                new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<>();
-        updateWrapper.eq(DailyCollection::getId, collectionId)
-                .setSql("note_count = note_count + 1");
-        dailyCollectionMapper.update(null, updateWrapper);
+        if (!savedNotes.isEmpty()) {
+            com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<DailyCollection> updateWrapper =
+                    new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<>();
+            updateWrapper.eq(DailyCollection::getId, collectionId)
+                    .setSql("note_count = note_count + " + savedNotes.size());
+            dailyCollectionMapper.update(null, updateWrapper);
+        }
 
-        return note;
+        return savedNotes.isEmpty() ? null : savedNotes.get(0);
     }
 
     /**

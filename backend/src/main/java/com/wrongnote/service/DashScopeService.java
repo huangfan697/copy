@@ -6,35 +6,54 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wrongnote.config.DashScopeConfig;
 import com.wrongnote.dto.NoteParseResult;
 import com.wrongnote.dto.PracticeQuestionDTO;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class DashScopeService {
 
     private final DashScopeConfig dashScopeConfig;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final RestTemplate restTemplate = new RestTemplate();
+
+    public DashScopeService(DashScopeConfig dashScopeConfig) {
+        this.dashScopeConfig = dashScopeConfig;
+    }
 
     /**
      * 解析错题图片：只提取被标记为错误的题目
+     * @return 可能包含多道错题
      */
-    public NoteParseResult parseWrongNote(String imageUrl) {
+    public List<NoteParseResult> parseWrongNote(String imageUrl) {
         String systemPrompt = "你是一位经验丰富的老师。请仔细分析图片中每一道题，只提取用户标记为错误的题目（例如：答案被划掉/划红线、旁边手写了正确答案、打了叉等）。"
-                + "如果一张图包含多道错题，请返回数组格式；如果只有单道错题，返回单个 JSON 对象。\n"
-                + "只提取错题，答对的题目不要返回。\n"
+                + "只提取错题，答对的题目不要返回。统一返回 JSON 数组格式。\n"
                 + "每道题格式：{\"subject\":\"科目名称\",\"content\":\"题目完整文本，公式用LaTeX\",\"userAnswer\":\"用户写的答案（如有）\",\"correctAnswer\":\"红线标注的正确答案\",\"analysis\":\"解题思路和关键点分析\",\"tags\":[\"知识点1\",\"知识点2\"]}";
 
         String result = callVisionModel(systemPrompt, imageUrl);
-        return parseJsonResponse(result, NoteParseResult.class);
+        return parseNoteParseResults(result);
+    }
+
+    private List<NoteParseResult> parseNoteParseResults(String response) {
+        try {
+            String json = extractJson(response);
+            JsonNode node = objectMapper.readTree(json);
+            if (node.isArray()) {
+                return objectMapper.readValue(json,
+                        objectMapper.getTypeFactory().constructCollectionType(List.class, NoteParseResult.class));
+            } else if (node.isObject()) {
+                return List.of(objectMapper.readValue(json, NoteParseResult.class));
+            }
+            return Collections.emptyList();
+        } catch (JsonProcessingException e) {
+            log.error("解析错题 JSON 失败: {}", response, e);
+            throw new RuntimeException("AI 返回格式解析失败: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -94,38 +113,49 @@ public class DashScopeService {
     }
 
     private String postJson(Map<String, Object> body) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(dashScopeConfig.getApiKey());
-
-        String url = dashScopeConfig.getBaseUrl() + "/v1/chat/completions";
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+        String urlStr = dashScopeConfig.getBaseUrl() + "/v1/chat/completions";
+        String jsonBody;
+        try {
+            jsonBody = objectMapper.writeValueAsString(body);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("JSON 序列化失败", e);
+        }
 
         try {
-            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, request, Map.class);
-            Map<String, Object> responseBody = response.getBody();
-            if (responseBody != null && responseBody.containsKey("choices")) {
-                List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
-                if (!choices.isEmpty()) {
-                    Map<String, Object> choice = choices.get(0);
-                    Map<String, Object> message = (Map<String, Object>) choice.get("message");
-                    return (String) message.get("content");
-                }
+            URL url = new URL(urlStr);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("Authorization", "Bearer " + dashScopeConfig.getApiKey());
+            conn.setDoOutput(true);
+            conn.setConnectTimeout(60000);
+            conn.setReadTimeout(300000);
+
+            byte[] bytes = jsonBody.getBytes(StandardCharsets.UTF_8);
+            conn.setFixedLengthStreamingMode(bytes.length);
+
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(bytes);
+                os.flush();
+            }
+
+            InputStream is = conn.getResponseCode() == 200 ? conn.getInputStream() : conn.getErrorStream();
+            String response = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            is.close();
+
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("AI 接口返回错误: " + conn.getResponseCode() + " " + response);
+            }
+
+            JsonNode node = objectMapper.readTree(response);
+            JsonNode choices = node.get("choices");
+            if (choices != null && choices.isArray() && choices.size() > 0) {
+                return choices.get(0).get("message").get("content").asText();
             }
             throw new RuntimeException("AI 返回结果中没有 choices");
-        } catch (RestClientException e) {
+        } catch (IOException e) {
             log.error("调用 AI 模型失败", e);
             throw new RuntimeException("AI 调用失败: " + e.getMessage(), e);
-        }
-    }
-
-    private <T> T parseJsonResponse(String response, Class<T> clazz) {
-        try {
-            String json = extractJson(response);
-            return objectMapper.readValue(json, clazz);
-        } catch (JsonProcessingException e) {
-            log.error("解析 AI JSON 响应失败: {}", response, e);
-            throw new RuntimeException("AI 返回格式解析失败: " + e.getMessage(), e);
         }
     }
 

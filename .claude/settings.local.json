@@ -25,7 +25,18 @@
       "Bash(pip3 install:*)",
       "Bash(python3:*)",
       "WebSearch",
-      "WebFetch(domain:help.aliyun.com)"
+      "WebFetch(domain:help.aliyun.com)",
+      "Bash(mvn package:*)",
+      "Bash(curl -s http://localhost:8080/api/notes?userId=1)",
+      "Bash(curl -s 'http://localhost:8080/api/notes?userId=1')",
+      "Bash(curl -s 'http://localhost:8080/api/collections?userId=1')",
+      "Bash(curl -s -X POST 'http://localhost:8080/api/notes/upload?userId=1' -H 'Content-Type: application/json' -d '{\"imageUrl\":\"__TRACKED_VAR__\"}')",
+      "Bash(cp '/Users/admin/Library/Containers/com.tencent.xinWeChat/Data/Library/Application Support/com.tencent.xinWeChat/2.0b4.0.9/ed22fa80d9fa966c950cf7dc4d2e0e0b/Message/MessageTemp/3062ead5d1efc148524e39de2efddbe3/Image/2414011779192913_.pic.jpg' /tmp/test-wrong-note.jpg)",
+      "Bash(curl -v -X POST 'http://localhost:8080/api/notes/upload?userId=1' -F file=@/tmp/test-wrong-note.jpg -H 'Accept: application/json')",
+      "Bash(curl -s -X POST 'http://localhost:8080/api/notes/upload?userId=1' -F file=@/tmp/test-wrong-note-compressed.jpg -H 'Accept: application/json')",
+      "Bash(curl -s -X POST http://newapi.raycloud.cn/v1/chat/completions -H 'Content-Type: application/json' -H 'Authorization: Bearer sk-XzUxZaRbWTTo0oUePIZuiUwyspiE4fWSSQe7fPIiV7DnUAsM' -d '{:*)",
+      "Bash(curl -s -X POST 'http://localhost:8080/api/notes/upload?userId=1' -F file=@/tmp/tiny-test.jpg -H 'Accept: application/json')",
+      "Bash(curl -s -X POST 'http://localhost:8080/api/notes/upload?userId=1' -F file=@/tmp/test-wrong-note-small.jpg -H 'Accept: application/json')"
     ]
   }
 }
