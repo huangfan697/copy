@@ -31,9 +31,12 @@ public class DashScopeService {
      * @return 可能包含多道错题
      */
     public List<NoteParseResult> parseWrongNote(String imageUrl) {
-        String systemPrompt = "你是一位经验丰富的老师。请仔细分析图片中每一道题，只提取用户标记为错误的题目（例如：答案被划掉/划红线、旁边手写了正确答案、打了叉等）。"
-                + "只提取错题，答对的题目不要返回。统一返回 JSON 数组格式。\n"
-                + "每道题格式：{\"subject\":\"科目名称\",\"content\":\"题目完整文本，公式用LaTeX\",\"userAnswer\":\"用户写的答案（如有）\",\"correctAnswer\":\"红线标注的正确答案\",\"analysis\":\"解题思路和关键点分析\",\"tags\":[\"知识点1\",\"知识点2\"]}";
+        String systemPrompt = "你是一位经验丰富的老师。请仔细分析图片中每一道选择题，只提取用户标记为错误的题目（答案被划掉、画斜杠/、打叉X、旁边手写了正确答案）。"
+                + "打了勾✓或没有批改标记的题目不要返回。\n"
+                + "每道题的content字段要包含完整题目和所有选项A B C D。\n"
+                + "correctAnswer字段填旁边手写的正确答案字母，没有则留空字符串。\n"
+                + "统一返回 JSON 数组格式。\n"
+                + "每道题格式：{\"subject\":\"科目名称\",\"content\":\"题目完整文本，包含所有选项\",\"userAnswer\":\"用户填的答案\",\"correctAnswer\":\"手写正确答案字母（没有则留空）\",\"analysis\":\"解题思路\",\"tags\":[\"知识点1\",\"知识点2\"]}";
 
         String result = callVisionModel(systemPrompt, imageUrl);
         return parseNoteParseResults(result);
@@ -76,7 +79,7 @@ public class DashScopeService {
     private String callVisionModel(String systemPrompt, String imageUrl) {
         List<Map<String, Object>> systemContent = List.of(Map.of("type", "text", "text", systemPrompt));
         List<Map<String, Object>> userContent = Arrays.asList(
-                Map.of("type", "text", "text", "请识别这张图片中的错题，只返回被标记错误的题目"),
+                Map.of("type", "text", "text", "请分析这张试卷图片，找出所有答错的题（被画斜杠/、打叉X、或划掉答案的）。返回 JSON 数组。"),
                 Map.of("type", "image_url", "image_url", Map.of("url", imageUrl))
         );
 
