@@ -42,9 +42,10 @@ public class CollectionService {
             throw new IllegalArgumentException("栏目不存在: " + collectionId);
         }
 
-        // 查询该栏目下的错题
+        // 查询该栏目下的错题（排除 imageUrl，避免传输大量 base64 数据）
         LambdaQueryWrapper<WrongNote> noteWrapper = new LambdaQueryWrapper<>();
-        noteWrapper.eq(WrongNote::getCollectionId, collectionId)
+        noteWrapper.select(WrongNote.class, info -> !"image_url".equals(info.getColumn()))
+                .eq(WrongNote::getCollectionId, collectionId)
                 .eq(WrongNote::getUserId, userId)
                 .orderByDesc(WrongNote::getCreatedAt);
         List<WrongNote> notes = wrongNoteMapper.selectList(noteWrapper);
@@ -71,9 +72,10 @@ public class CollectionService {
      * 获取栏目下的练习题（用于训练）
      */
     public List<PracticeQuestion> getCollectionQuestions(Long collectionId, Long userId) {
-        // 先查该栏目下的错题ID
+        // 先查该栏目下的错题ID（只需要 ID，不需要其他字段）
         LambdaQueryWrapper<WrongNote> noteWrapper = new LambdaQueryWrapper<>();
-        noteWrapper.eq(WrongNote::getCollectionId, collectionId)
+        noteWrapper.select(WrongNote::getId)
+                .eq(WrongNote::getCollectionId, collectionId)
                 .eq(WrongNote::getUserId, userId);
         List<WrongNote> notes = wrongNoteMapper.selectList(noteWrapper);
 
